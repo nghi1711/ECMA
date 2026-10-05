@@ -1,6 +1,6 @@
 # Decision: Server-rendered MVC
 
-Status: Accepted
+Status: Superseded in part by [0004](0004-clean-architecture.md)
 
 ## Context
 

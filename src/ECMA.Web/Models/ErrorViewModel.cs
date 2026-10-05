@@ -1,4 +1,4 @@
-namespace ECMA.Models;
+namespace ECMA.Web.Models;
 
 public class ErrorViewModel
 {

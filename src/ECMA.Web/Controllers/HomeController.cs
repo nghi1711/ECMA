@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using ECMA.Models;
+using ECMA.Web.Models;
 
-namespace ECMA.Controllers;
+namespace ECMA.Web.Controllers;
 
 public class HomeController : Controller
 {

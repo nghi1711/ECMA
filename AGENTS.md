@@ -10,7 +10,7 @@ Accepted choices: [cookie authentication and Identity `PasswordHasher<TUser>`](d
 
 ## Current repository
 
-Only an MVC template exists: `Program.cs`, `Controllers/HomeController.cs`, `Models/ErrorViewModel.cs`, `Views/`, `wwwroot/`. No domain entities, DbContext, EF packages/migrations, authentication, business services, or tests exist yet. Do not describe planned infrastructure as implemented. Preserve unrelated user changes, including the existing `ECMA.csproj` folder entries.
+Only an MVC template exists: `src/ECMA.Web/Program.cs`, `src/ECMA.Web/Controllers/HomeController.cs`, `src/ECMA.Web/Models/ErrorViewModel.cs`, `src/ECMA.Web/Views/`, and `src/ECMA.Web/wwwroot/`. No domain entities, DbContext, EF packages/migrations, authentication, business services, or tests exist yet. Do not describe planned infrastructure as implemented. Preserve unrelated user changes, including the existing `src/ECMA.Web/ECMA.Web.csproj` folder entries.
 
 Read [overview](docs/architecture/overview.md), [conventions](docs/development/conventions.md), [persistence](docs/architecture/persistence.md), [UI](docs/architecture/ui.md), and [verification](docs/development/verification.md) as relevant. Reinspect code each session; documentation is a baseline, not proof of current state.
 
@@ -29,7 +29,7 @@ Planner, implementer, tester, and reviewer are optional perspectives on this wor
 
 ## MVC rules
 
-- Controllers handle HTTP; services own non-trivial business logic. Use DI in `Program.cs`, conventional routing, and async EF operations when appropriate.
+- Controllers handle HTTP; services own non-trivial business logic. Use DI in `src/ECMA.Web/Program.cs`, conventional routing, and async EF operations when appropriate.
 - Use strongly typed ViewModels for forms and presentation. Do not bind persistence entities when that risks over-posting or exposes persistence concerns.
 - Use DataAnnotations and `ModelState` for server validation, plus business-rule checks. Client validation is optional enhancement, never authority.
 - Enforce authentication, role policies/attributes, ownership, and Staff event assignments on the server. Hiding buttons is not authorization.

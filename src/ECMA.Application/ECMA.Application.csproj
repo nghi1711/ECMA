@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\ECMA.Domain\ECMA.Domain.csproj" />
+  </ItemGroup>
+</Project>

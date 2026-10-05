@@ -2,18 +2,18 @@
 
 ## Observed
 
-- One MVC web project and solution: `ECMA.csproj`, `ECMA.sln`; root namespace `ECMA` with file-scoped `ECMA.Controllers` and `ECMA.Models`.
+- Three projects and dependency direction: Web -> Application -> Domain; source paths under `src/`; shared compiler settings in `Directory.Build.props`; web root namespace `ECMA.Web`.
 - C# classes/properties/actions use PascalCase; controller classes end in `Controller`, view-specific model uses `ViewModel`. Nullable reference types and implicit usings are enabled.
 - Four-space indentation in current C#; static assets/layout formatting varies. Match the touched file; no `.editorconfig` is present.
-- DI and middleware are configured in top-level `Program.cs`. `HomeController` has only view/error actions; there is no constructor-injection/service pattern yet.
+- DI and middleware are configured in `src/ECMA.Web/Program.cs`. `HomeController` has only view/error actions; there is no constructor-injection/service pattern yet.
 - Conventional routing and Razor Tag Helpers; `ErrorViewModel.RequestId` is nullable, errors disable caching and expose a request ID, not a stack trace.
 - Logging configuration uses built-in providers/levels; no custom logger or operational-log implementation exists.
-- No entities, repositories, ViewModels folder, forms/server-validation convention, authentication, migration workflow, tests, README, CI, NuGet overrides, or local .NET tool manifest exists. Bun `package.json`/`bun.lock` now declare Tailwind CSS and its CLI as development dependencies; no CSS build scripts exist yet.
+- No source files currently exist in Domain/Application and no test project exists; frontend dependencies are under `src/ECMA.Web/`.
 - `AGENT.md` is a compatibility pointer; `AGENTS.md` contains canonical instructions. Existing empty `agent/`, `tasks/`, and `docs/architechture/` do not establish an orchestration or architecture framework. Do not rewrite user-added project folder entries solely to fix that spelling.
 
 ## Recommendations for new code (not existing implementation)
 
-- Preserve the single MVC project. Use `Controllers/`, `Models/`, `Views/`, and `wwwroot/`; introduce `ViewModels/`, `Services/`, or `Data/` only for files a feature needs.
+- Preserve project boundaries from ADR 0004; keep presentation in standard folders under `src/ECMA.Web`; add Domain/Application folders only when existing feature code needs them; Infrastructure remains out of scope until its task.
 - Name presentation models `*ViewModel`, business services `*Service`, and asynchronous service/database methods `*Async`. Preserve action/view routing names when choosing async action names.
 - Prefer constructor injection. DbContext normally has scoped lifetime; background jobs must create scopes rather than capture scoped services in singletons. Avoid interfaces with one implementation unless a real testing/integration boundary warrants them.
 - Validate trust-boundary input with DataAnnotations/`ModelState` and enforce business invariants in services and database constraints. Bind explicit allowed inputs; derive roles, ownership, prices, and account status on the server.

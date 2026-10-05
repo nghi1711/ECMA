@@ -1,6 +1,6 @@
 # Verification and feature completion
 
-Run commands from the repository root with a .NET 10 SDK. `ECMA.sln` currently contains one web project and no test projects. No CI, test runner packages, seed/reset scripts, local tool manifest, or PostgreSQL environment is configured. Keep this document current as infrastructure is introduced.
+Run commands from the repository root with a .NET 10 SDK. `ECMA.sln` contains Web, Application, and Domain projects but no test projects. No CI, test runner packages, seed/reset scripts, local tool manifest, or PostgreSQL environment is configured. Keep this document current as infrastructure is introduced.
 
 ## Supported baseline commands
 
@@ -9,12 +9,12 @@ dotnet --info
 dotnet restore ECMA.sln
 dotnet build ECMA.sln --no-restore
 dotnet test ECMA.sln --no-build
-dotnet run --project ECMA.csproj --launch-profile http --no-build
+dotnet run --project src/ECMA.Web/ECMA.Web.csproj --launch-profile http --no-build
 ```
 
 The HTTP profile serves `http://localhost:5028`; the HTTPS profile uses `https://localhost:7076` and HTTP 5028. HTTP-only development may log a missing HTTPS-port warning because HTTPS redirection is configured; use the HTTPS profile with a trusted development certificate when testing HTTPS. Do not suppress production HTTPS protections.
 
-`dotnet test` may exit successfully with no tests: report zero tests rather than a passing suite. When a feature needs automated tests, add the smallest suitable test project/runner, include it in the solution, and document its exact commands. If placed under this root web project's directory, exclude test sources/content from the web project's SDK globs and verify the build boundary. No runner is selected by this setup.
+`dotnet test` may exit successfully with no tests: report zero tests rather than a passing suite. Future test projects belong under `tests/`, must be added to the solution's `tests` folder, and need the smallest suitable runner. No runner is selected by this setup.
 
 ## Per-feature checklist
 
@@ -52,8 +52,8 @@ The setup change is documentation-only. Verification used SDK 10.0.203:
 - `dotnet restore ECMA.sln`: succeeded (exit 0).
 - `dotnet build ECMA.sln --no-restore`: succeeded (exit 0), no reported warnings/errors.
 - `dotnet test ECMA.sln --no-build`: succeeded (exit 0), but no test projects exist and zero tests executed. This is not a passing feature suite.
-- `dotnet run --project ECMA.csproj --launch-profile http --no-build`: started in Development on port 5028. HTTP checks returned 200 for `/`, `/Home/Privacy`, `/css/site.css`, and `/lib/bootstrap/dist/css/bootstrap.min.css`; page contents matched the template. The verification server was stopped afterward.
+- The then-root web project was run with the HTTP launch profile in Development on port 5028. HTTP checks returned 200 for `/`, `/Home/Privacy`, `/css/site.css`, and `/lib/bootstrap/dist/css/bootstrap.min.css`; page contents matched the template. The verification server was stopped afterward.
 - The HTTP-only run logged `Failed to determine the https port for redirect.` This is the documented launch-profile limitation, not a build failure. HTTPS/certificate behavior was not tested.
 - `git diff --check`: succeeded. Relative links in all 10 harness documents resolved. All task document contents and the pre-existing project diff were reviewed; an independent read-only review found no actionable issues.
 
-No application source, packages, SRS, or project configuration was changed by this task. The pre-existing `ECMA.csproj` edit was preserved. PostgreSQL connection/migrations, authentication, product flows, and automated feature tests were not verified because those components do not exist.
+No application source, packages, SRS, or project configuration was changed by that task. Its pre-existing web-project edit was preserved. PostgreSQL connection/migrations, authentication, product flows, and automated feature tests were not verified because those components did not exist.

@@ -4,7 +4,7 @@ Status: Accepted
 
 ## Context
 
-The user explicitly selected Razor `.cshtml` for the frontend and Tailwind CSS for styling on 2026-10-03. The existing MVC template uses Bootstrap. The user has installed Tailwind CSS 4.3.3 and `@tailwindcss/cli` through Bun; `package.json` and `bun.lock` exist, but no Tailwind input/output, script, or layout integration exists yet.
+The user explicitly selected Razor `.cshtml` for the frontend and Tailwind CSS for styling on 2026-10-03. The existing MVC template uses Bootstrap. The user has installed Tailwind CSS 4.3.3 and `@tailwindcss/cli` through Bun; `src/ECMA.Web/package.json` and `src/ECMA.Web/bun.lock` exist, but no Tailwind input/output, script, or layout integration exists yet.
 
 ## Decision
 

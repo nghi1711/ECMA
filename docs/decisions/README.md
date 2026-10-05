@@ -28,6 +28,7 @@ Preserve superseded records and link replacements rather than rewriting history.
 
 ## Index
 
-- [0001: Server-rendered MVC](0001-server-rendered-mvc.md) — Accepted from the explicit repository-setup brief.
+- [0001: Server-rendered MVC](0001-server-rendered-mvc.md) — Superseded in part by 0004; the single deployable SSR decision remains active.
 - [0002: Cookie authentication and Identity password hashing](0002-cookie-authentication-password-hashing.md) — Accepted from the explicit user follow-up; overrides the SRS algorithm wording.
 - [0003: Razor Views with Tailwind CSS](0003-razor-tailwind-styling.md) — Accepted from the explicit user follow-up; template styling migration remains future work.
+- [0004: Layered projects for Clean Architecture boundaries](0004-clean-architecture.md) — Accepted from the explicit Phase 1 task brief; Infrastructure is planned for Phase 2.

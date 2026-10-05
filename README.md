@@ -37,7 +37,7 @@ Conferences use the same workflow as events: a conference is an event tagged **C
 | Database | PostgreSQL with EF Core — planned, not configured |
 | Authentication | Cookies and Identity `PasswordHasher<TUser>` — accepted, not implemented |
 | Styling | Tailwind CSS v4 dependencies installed through Bun; no CSS build pipeline yet, and the template still uses Bootstrap |
-| Testing | No test projects yet |
+| Testing | No test projects; `dotnet test` currently discovers zero tests |
 
 Accepted decisions take precedence over conflicting SRS wording: the application uses MVC/Razor rather than a separate frontend/REST API, and Identity PBKDF2 password hashing rather than bcrypt/argon2.
 
@@ -48,7 +48,7 @@ Prerequisite: a **.NET 10 SDK**. Run these commands from the repository root:
 ```shell
 dotnet restore ECMA.sln
 dotnet build ECMA.sln --no-restore
-dotnet run --project ECMA.csproj --launch-profile http --no-build
+dotnet run --project src/ECMA.Web/ECMA.Web.csproj --launch-profile http --no-build
 ```
 
 Open **http://localhost:5028**. This currently serves the template pages only; no PostgreSQL connection is needed for the template.
@@ -57,7 +57,7 @@ The HTTP-only profile may log `Failed to determine the https port for redirect.`
 
 ```shell
 dotnet dev-certs https --trust
-dotnet run --project ECMA.csproj --launch-profile https --no-build
+dotnet run --project src/ECMA.Web/ECMA.Web.csproj --launch-profile https --no-build
 ```
 
 The HTTPS address is **https://localhost:7076**.
@@ -74,9 +74,11 @@ There are currently **zero test projects**. A successful command with no tests i
 
 ## Repository guide
 
-- `Program.cs` — application startup and MVC routing.
-- `Controllers/`, `Models/`, `Views/` — current MVC template.
-- `wwwroot/` — static assets.
+- `src/ECMA.Web/` — MVC application, Razor views, configuration, static assets, and frontend dependencies.
+- `src/ECMA.Application/` — Application boundary; currently an empty project referencing Domain.
+- `src/ECMA.Domain/` — Domain boundary; currently an empty dependency-free project.
+- `tests/` — Solution folder for future test projects; no test projects currently exist.
+- `docs/` — Documentation folder.
 - `docs/product/` — requirements, feature dependencies, and open questions.
 - `docs/decisions/` — accepted technology and architecture decisions.
 - `docs/architecture/` — architecture, persistence, and UI guidance.

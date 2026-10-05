@@ -8,9 +8,9 @@ Inspection found global `dotnet-ef` 10.0.10, but no repository tool manifest. A 
 
 ## Minimal first persistence change
 
-Before implementation, inspect again for an existing context. If still absent, the recommended default is `Data/EcmaDbContext.cs`, domain entities in `Models/`, and migrations in `Data/Migrations/`, within the existing project. These paths are recommendations, not current code. Use EF Core 10-compatible packages, `Npgsql.EntityFrameworkCore.PostgreSQL`, and `Microsoft.EntityFrameworkCore.Design`; verify exact compatible versions before installing. Register the context with DI and PostgreSQL configuration in `Program.cs`. Establish a local EF tool manifest/version when migration work first requires it.
+Before implementation, inspect again for an existing context. If still absent, domain entities belong under `src/ECMA.Domain/Entities/`. The planned `src/ECMA.Infrastructure/` project will own DbContext, mappings, migrations, and EF Core/Npgsql packages; registration remains in `src/ECMA.Web/Program.cs`. These paths are recommendations, not current code. Verify exact .NET 10-compatible package versions and establish a local EF tool manifest when migration work first requires it.
 
-Use DataAnnotations or Fluent API in the context for small mappings; extract `IEntityTypeConfiguration<T>` only when mapping size warrants it. Record actual chosen paths/packages here after implementation. Do not add repositories or Unit of Work over DbContext without a concrete need.
+Use DataAnnotations or Fluent API for small mappings; extract `IEntityTypeConfiguration<T>` only when mapping size warrants it. Record actual chosen paths/packages here after implementation. Do not add more persistence abstractions without a concrete need.
 
 Keep connection credentials outside version control (environment variables or configured user secrets). Document the eventual connection-string key and development database setup, but do not claim either exists now.
 
@@ -29,11 +29,11 @@ Only after packages, tools, DbContext, and connection configuration exist, run f
 
 ```text
 dotnet tool restore
-dotnet ef migrations add FeatureName --project ECMA.csproj --startup-project ECMA.csproj --context EcmaDbContext --output-dir Data/Migrations
-dotnet ef migrations script --idempotent --project ECMA.csproj --startup-project ECMA.csproj --context EcmaDbContext
+dotnet ef migrations add FeatureName --project src/ECMA.Infrastructure/ECMA.Infrastructure.csproj --startup-project src/ECMA.Web/ECMA.Web.csproj --context EcmaDbContext --output-dir Data/Migrations
+dotnet ef migrations script --idempotent --project src/ECMA.Infrastructure/ECMA.Infrastructure.csproj --startup-project src/ECMA.Web/ECMA.Web.csproj --context EcmaDbContext
 dotnet build ECMA.sln
 dotnet test ECMA.sln
-dotnet ef database update --project ECMA.csproj --startup-project ECMA.csproj --context EcmaDbContext
+dotnet ef database update --project src/ECMA.Infrastructure/ECMA.Infrastructure.csproj --startup-project src/ECMA.Web/ECMA.Web.csproj --context EcmaDbContext
 ```
 
 `dotnet tool restore` requires the future local manifest. Inspect migration code, snapshot, and SQL before application. Apply only to an authorized development database; check the command result and database migration history/state. If PostgreSQL is unavailable, report application/integration verification as blocked. Never equate migration generation with application. Back up and obtain approval for destructive changes; do not edit migrations already shared/applied to bypass history. Document a safe rollback or forward-fix plan for significant schema changes.

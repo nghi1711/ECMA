@@ -2,11 +2,11 @@
 
 ## Existing conventions
 
-- Views live in `Views/<Controller>/<Action>.cshtml`; shared views/partials live in `Views/Shared`.
-- `Views/_ViewStart.cshtml` selects `_Layout`; `_ViewImports.cshtml` imports `ECMA`, `ECMA.Models`, and MVC Tag Helpers.
+- Views live in `src/ECMA.Web/Views/<Controller>/<Action>.cshtml`; shared views/partials live in `src/ECMA.Web/Views/Shared`.
+- `src/ECMA.Web/Views/_ViewStart.cshtml` selects `_Layout`; `_ViewImports.cshtml` imports `ECMA.Web`, `ECMA.Web.Models`, and MVC Tag Helpers.
 - `_Layout.cshtml` uses `ViewData["Title"]`, `RenderBody`, and optional `Scripts`. Navigation uses `asp-controller`/`asp-action`; the error page uses `@model ErrorViewModel`.
-- Bootstrap 5.3.3, jQuery 3.7.1, jQuery Validation 1.21.0, and unobtrusive validation 4.0.0 are vendored under `wwwroot/lib`. Bun `package.json`/`bun.lock` now declare Tailwind CSS 4.3.3 and its CLI; no Tailwind input/output, build scripts, or layout integration exists yet.
-- Shared CSS is `wwwroot/css/site.css`; layout-isolated CSS is `_Layout.cshtml.css`, exposed through `ECMA.styles.css`. Shared JS is `wwwroot/js/site.js`, currently an empty template hook. Asset links use versioning where shown in the layout.
+- Bootstrap 5.3.3, jQuery 3.7.1, jQuery Validation 1.21.0, and unobtrusive validation 4.0.0 are vendored under `src/ECMA.Web/wwwroot/lib`. `src/ECMA.Web/package.json` and `src/ECMA.Web/bun.lock` declare Tailwind CSS 4.3.3 and its CLI; no Tailwind input/output, build scripts, or layout integration exists yet.
+- Shared CSS is `src/ECMA.Web/wwwroot/css/site.css`; layout-isolated CSS is `_Layout.cshtml.css`, exposed through `ECMA.Web.styles.css`. Shared JS is `src/ECMA.Web/wwwroot/js/site.js`, currently an empty template hook. Asset links use versioning where shown in the layout.
 - Current content and `<html lang="en">` are English template defaults, not a settled product language/brand. The SRS allows English or Vietnamese but requires consistency.
 
 ## Feature implementation guidance

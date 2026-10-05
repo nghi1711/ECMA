@@ -7,17 +7,20 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["ECMA.csproj", "./"]
-RUN dotnet restore "ECMA.csproj"
+COPY ["Directory.Build.props", "."]
+COPY ["src/ECMA.Domain/ECMA.Domain.csproj", "src/ECMA.Domain/"]
+COPY ["src/ECMA.Application/ECMA.Application.csproj", "src/ECMA.Application/"]
+COPY ["src/ECMA.Web/ECMA.Web.csproj", "src/ECMA.Web/"]
+RUN dotnet restore "src/ECMA.Web/ECMA.Web.csproj"
 COPY . .
-WORKDIR "/src/"
-RUN dotnet build "./ECMA.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/src/ECMA.Web"
+RUN dotnet build "ECMA.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./ECMA.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "ECMA.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "ECMA.dll"]
+ENTRYPOINT ["dotnet", "ECMA.Web.dll"]
