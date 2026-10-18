@@ -1,7 +1,29 @@
 ﻿services:
+  postgres:
+    image: postgres:18.3-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-data:/var/lib/postgresql
+
   ecma:
     image: ecma
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
 

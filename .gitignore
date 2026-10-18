@@ -43,3 +43,10 @@ Thumbs.db
 obj/
 # NodeJS
 node_modules/
+
+# Local secrets
+.env
+
+# AI
+tasks/
+.github/agents/

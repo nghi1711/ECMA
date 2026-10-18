@@ -1,20 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <AssemblyName>ECMA.Web</AssemblyName>
-        <RootNamespace>ECMA.Web</RootNamespace>
-        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
-
-    <ItemGroup>
-      <Folder Include="docs\api\" />
-      <Folder Include="docs\architechture\" />
-      <Folder Include="docs\database\" />
-      <Folder Include="docs\uml\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\ECMA.Application\ECMA.Application.csproj" />
-    </ItemGroup>
 
 </Project>
