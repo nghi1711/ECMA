@@ -4,9 +4,9 @@
 
 PostgreSQL and EF Core 10 are implemented in `src/ECMA.Infrastructure`. `Data/EcmaDbContext.cs` owns the context, `Data/Configurations.cs` owns one Fluent API configuration per entity, `Data/Repositories.cs` and `Data/Queries.cs` implement Application ports, and `Data/Migrations` contains the reviewed initial migration. `src/ECMA.Web/Program.cs` calls `AddInfrastructure`.
 
-The connection-string key is `ConnectionStrings:ECMA`; provide it through environment variables or user secrets. Credentials are not committed. Repository-local `dotnet-ef` 10.0.4 is pinned in `.config/dotnet-tools.json`. The generated idempotent SQL is saved at `docs/database/initial.sql`.
+The connection-string key is `ConnectionStrings:ECMA`; provide it through environment variables or user secrets. For direct non-container development runs, the Web startup also reads `ECMA_CONNECTION_STRING` from the nearest `.env` found at or above its content root, but only when `ConnectionStrings:ECMA` is otherwise unset. Credentials are not committed. Repository-local `dotnet-ef` 10.0.4 is pinned in `.config/dotnet-tools.json`. The generated idempotent SQL is saved at `docs/database/initial.sql`.
 
-`compose.yaml` runs pinned `postgres:18.3-alpine` with a healthcheck and named volume. Copy `.env.example` to untracked `.env`, replace the password, then run `docker compose up -d postgres`. Production never applies migrations automatically.
+`compose.yaml` runs pinned `postgres:18.3-alpine` with a healthcheck and named volume. Copy `.env.example` to untracked `.env`, replace the password, then run `docker compose up -d postgres`. Docker Compose uses `ECMA_CONNECTION_STRING` when present and otherwise connects Web to its `postgres` service. Production never applies migrations automatically.
 
 Demo seeding uses `dotnet run --project src/ECMA.Web/ECMA.Web.csproj -- --seed`. It requires `Seed:AdminUsername`, `Seed:AdminPassword`, and `Seed:DemoPassword` from configuration. Development-only example values are `admin_user`, `AdminPass123`, and `DemoPass123`; never reuse them outside disposable local databases. Reset uses `scripts/reset-db.ps1` or `scripts/reset-db.sh` and refuses database names without `dev` or `test`.
 

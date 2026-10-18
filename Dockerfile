@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
@@ -9,7 +9,8 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Directory.Build.props", "."]
 COPY ["src/ECMA.Domain/ECMA.Domain.csproj", "src/ECMA.Domain/"]
-COPY ["src/ECMA.Application/ECMA.Application.csproj", "src/ECMA.Application/"]
+COPY ["src/EMCA.Application/EMCA.Application.csproj", "src/EMCA.Application/"]
+COPY ["src/ECMA.Infrastructure/ECMA.Infrastructure.csproj", "src/ECMA.Infrastructure/"]
 COPY ["src/ECMA.Web/ECMA.Web.csproj", "src/ECMA.Web/"]
 RUN dotnet restore "src/ECMA.Web/ECMA.Web.csproj"
 COPY . .
