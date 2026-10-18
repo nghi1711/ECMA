@@ -1,0 +1,29 @@
+using ECMA.Domain.Exceptions;
+using ECMA.Domain.Interfaces;
+using ECMA.Infrastructure.Data;
+using ECMA.Infrastructure.Repositories;
+
+namespace ECMA.Infrastructure;
+
+public sealed class UnitOfWork(EcmaDbContext context) : IUnitOfWork
+{
+    public IUserRepository Users { get; } = new UserRepository(context);
+
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException exception)
+            when (exception.InnerException is Npgsql.PostgresException { SqlState: Npgsql.PostgresErrorCodes.UniqueViolation, ConstraintName: "uq_users_username" })
+        {
+            throw new DuplicateUsernameException(exception);
+        }
+    }
+
+    public void Dispose()
+    {
+        context.Dispose();
+    }
+}
