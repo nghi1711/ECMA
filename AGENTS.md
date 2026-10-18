@@ -6,11 +6,11 @@ ECMA manages events/conferences, ticket orders, mock payments, check-in, and rol
 
 Priority: explicit user task > accepted repository decisions > SRS > architecture/convention documents > existing implementation. Identify conflicts; never silently invent behavior. See [accepted SSR decision](docs/decisions/0001-server-rendered-mvc.md) and [open questions/feature map](docs/product/agent-context.md). `FR-05` is not a unique SRS ID; ask for the module-qualified ID.
 
-Accepted choices: [cookie authentication and Identity `PasswordHasher<TUser>`](docs/decisions/0002-cookie-authentication-password-hashing.md), with hashes stored in PostgreSQL; [Razor `.cshtml` and Tailwind CSS v4](docs/decisions/0003-razor-tailwind-styling.md). Identity PBKDF2 explicitly overrides the SRS's bcrypt/argon2 wording. These choices are not yet implemented. Tailwind packages are installed via Bun; Bootstrap remains in the template until scoped migration.
+Accepted choices: [cookie authentication and Identity `PasswordHasher<TUser>`](docs/decisions/0002-cookie-authentication-password-hashing.md), with hashes stored in PostgreSQL; [Razor `.cshtml` and Tailwind CSS v4](docs/decisions/0003-razor-tailwind-styling.md). Identity PBKDF2 explicitly overrides the SRS's bcrypt/argon2 wording. Tailwind is built from `src/ECMA.Web/Styles/app.css` with Bun scripts in `src/ECMA.Web/package.json` and committed to `src/ECMA.Web/wwwroot/css/app.css`; rebuild it after changing Razor classes or source styles. Bootstrap files remain vendored but are no longer referenced by views.
 
 ## Current repository
 
-Only an MVC template exists: `src/ECMA.Web/Program.cs`, `src/ECMA.Web/Controllers/HomeController.cs`, `src/ECMA.Web/Models/ErrorViewModel.cs`, `src/ECMA.Web/Views/`, and `src/ECMA.Web/wwwroot/`. No domain entities, DbContext, EF packages/migrations, authentication, business services, or tests exist yet. Do not describe planned infrastructure as implemented. Preserve unrelated user changes, including the existing `src/ECMA.Web/ECMA.Web.csproj` folder entries.
+The solution contains pure BCL Domain entities/policies, Application use-case services/ports, EF Core/PostgreSQL Infrastructure under `src/ECMA.Infrastructure`, and the server-rendered MVC Web layer under `src/ECMA.Web`. Infrastructure owns `EcmaDbContext`, Fluent mappings, repository/query adapters, migrations, seed/reset utilities, clock/password/code/log adapters, and the maintenance worker. Web owns cookie authentication, principal-backed current user, Vietnamese product controllers/ViewModels/Razor views, HTTP result mapping, and guarded test hooks. Three intentionally empty projects exist under `tests/`; they contain no test files and provide no behavioral verification. Preserve unrelated user changes, including the existing `src/ECMA.Web/ECMA.Web.csproj` folder entries.
 
 Read [overview](docs/architecture/overview.md), [conventions](docs/development/conventions.md), [persistence](docs/architecture/persistence.md), [UI](docs/architecture/ui.md), and [verification](docs/development/verification.md) as relevant. Reinspect code each session; documentation is a baseline, not proof of current state.
 
@@ -19,7 +19,7 @@ Read [overview](docs/architecture/overview.md), [conventions](docs/development/c
 1. Read the full relevant FR, BR, NFR, permission matrix, and feature dependencies.
 2. Inspect existing request flow, DI, persistence, views, and tests. Resolve task-blocking ambiguities before implementing affected behavior.
 3. Write a short plan naming affected files, necessary prerequisites, and observable completion criteria. Keep a checklist in the session; no task queue or orchestration is required.
-4. Implement the smallest coherent change. Reuse code and native .NET/MVC features before adding dependencies. Do not introduce speculative layers, CQRS, MediatR, generic repositories, or Unit of Work.
+4. Implement the smallest coherent change. Reuse code and native .NET/MVC features before adding dependencies. Do not introduce speculative layers, CQRS, MediatR, or generic repositories. One narrow `IUnitOfWork` is allowed solely as the commit/transaction boundary accepted by ADR 0004.
 5. Build and run relevant tests. Inspect failures, fix their causes, and rerun checks. Add a focused runnable regression test for non-trivial behavior; if no test infrastructure exists, establish only what that feature needs.
 6. Verify the actual HTTP/UI flow, permissions, persisted state, and boundary/concurrency cases where relevant. A successful build or test command with zero discovered tests is not feature verification.
 7. Review the complete task diff against requirements, security, and acceptance criteria. Preserve unrelated changes. Update documentation when behavior, setup, or significant decisions change.
@@ -39,9 +39,9 @@ Planner, implementer, tester, and reviewer are optional perspectives on this wor
 
 ## Database rules
 
-PostgreSQL + EF Core are required but not configured. Before changing persistence, locate the current DbContext/configuration and preserve conventions. When absent, add minimal infrastructure only as a feature prerequisite and document its actual paths.
+PostgreSQL + EF Core are configured in `src/ECMA.Infrastructure`. Preserve `EcmaDbContext` and the per-entity Fluent configurations in `Data/Configurations.cs`. Use `ConnectionStrings:ECMA`; never commit credentials. Restore the pinned tool with `dotnet tool restore`. Create/apply migrations with the Infrastructure project and Web startup project; production migration application remains explicit.
 
-Schema changes require migrations and review of generated operations and SQL. Consider uniqueness, foreign keys, nullability, indexes, delete behavior, and concurrency. Avoid destructive changes unless explicitly required and approved with a data-preservation plan. Generated migrations are not evidence of application to a database. Never reset/drop a non-disposable database or commit credentials. Store instants in UTC; display Asia/Ho_Chi_Minh; VND amounts are integers.
+Schema changes require migrations and review of generated operations and SQL. Consider uniqueness, foreign keys, nullability, indexes, delete behavior, and concurrency. Avoid destructive changes unless explicitly required and approved with a data-preservation plan. Generated migrations are not evidence of application to a database. Reset scripts under `scripts/` refuse names without `dev` or `test`; never reset/drop another database. Store instants in UTC; display Asia/Ho_Chi_Minh; VND amounts are integers.
 
 ## Commands
 

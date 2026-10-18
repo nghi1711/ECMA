@@ -2,17 +2,13 @@
 
 ## Current state
 
-PostgreSQL is required by the SRS; EF Core is required by the project brief. Neither is wired up. There is no DbContext, entity mapping, migration, connection string, Npgsql/EF package, seed/reset utility, or database service in `compose.yaml`. There is no implemented naming/relationship/transaction convention to preserve yet. The SRS §6 is a conceptual data model, not an existing schema.
+PostgreSQL and EF Core 10 are implemented in `src/ECMA.Infrastructure`. `Data/EcmaDbContext.cs` owns the context, `Data/Configurations.cs` owns one Fluent API configuration per entity, `Data/Repositories.cs` and `Data/Queries.cs` implement Application ports, and `Data/Migrations` contains the reviewed initial migration. `src/ECMA.Web/Program.cs` calls `AddInfrastructure`.
 
-Inspection found global `dotnet-ef` 10.0.10, but no repository tool manifest. A global tool on one workstation does not make database commands reproducible elsewhere.
+The connection-string key is `ConnectionStrings:ECMA`; provide it through environment variables or user secrets. Credentials are not committed. Repository-local `dotnet-ef` 10.0.4 is pinned in `.config/dotnet-tools.json`. The generated idempotent SQL is saved at `docs/database/initial.sql`.
 
-## Minimal first persistence change
+`compose.yaml` runs pinned `postgres:18.3-alpine` with a healthcheck and named volume. Copy `.env.example` to untracked `.env`, replace the password, then run `docker compose up -d postgres`. Production never applies migrations automatically.
 
-Before implementation, inspect again for an existing context. If still absent, domain entities belong under `src/ECMA.Domain/Entities/`. The planned `src/ECMA.Infrastructure/` project will own DbContext, mappings, migrations, and EF Core/Npgsql packages; registration remains in `src/ECMA.Web/Program.cs`. These paths are recommendations, not current code. Verify exact .NET 10-compatible package versions and establish a local EF tool manifest when migration work first requires it.
-
-Use DataAnnotations or Fluent API for small mappings; extract `IEntityTypeConfiguration<T>` only when mapping size warrants it. Record actual chosen paths/packages here after implementation. Do not add more persistence abstractions without a concrete need.
-
-Keep connection credentials outside version control (environment variables or configured user secrets). Document the eventual connection-string key and development database setup, but do not claim either exists now.
+Demo seeding uses `dotnet run --project src/ECMA.Web/ECMA.Web.csproj -- --seed`. It requires `Seed:AdminUsername`, `Seed:AdminPassword`, and `Seed:DemoPassword` from configuration. Development-only example values are `admin_user`, `AdminPass123`, and `DemoPass123`; never reuse them outside disposable local databases. Reset uses `scripts/reset-db.ps1` or `scripts/reset-db.sh` and refuses database names without `dev` or `test`.
 
 ## Data invariants
 

@@ -8,11 +8,13 @@ Current request flow is Browser → ASP.NET Core MVC → `HomeController` → Ra
 
 `src/ECMA.Web/Program.cs` registers `AddControllersWithViews`, builds the app, configures production exception handling at `/Home/Error` and HSTS, HTTPS redirection, routing, authorization middleware, `MapStaticAssets`, and conventional `{controller=Home}/{action=Index}/{id?}` routing with `.WithStaticAssets()`. Preserve these modern .NET 10 static-asset conventions.
 
-## Required direction, not yet implemented
+## Implemented Domain/Application baseline
 
-Browser → MVC Controllers → business services when needed → EF Core DbContext → PostgreSQL. Controllers return server-rendered Razor Views; a separate frontend/API application is not required. [Decision 0001](../decisions/0001-server-rendered-mvc.md) resolves the SRS architecture conflict in favor of the explicit project brief.
+Task 01 implements pure BCL Domain entities, policies, state transitions, and Application use-case services/ports. The aggregate boundaries are `User`, `Event` (tags, timeline, ticket-type configuration), and `Order` (items, tickets, check-in history). Cross-aggregate facts enter policies through use-case parameters or narrow repository queries; Domain never calls a repository. `TicketType.Sold` changes only through the inventory port so Task 02 can provide an atomic PostgreSQL implementation.
 
-Add services only for meaningful business logic. Web depends on Application, and Application depends on Domain. Infrastructure remains future work per [decision 0004](../decisions/0004-clean-architecture.md). Persistence, accounts, role management, background jobs, mock payment, and all domain features remain unimplemented.
+Application uses `Result<T>`/`Error`, one `AccessPolicy`, narrow repositories/read queries, `IClock`, `IPasswordHasher`, `ITicketCodeGenerator`, `IOperationLog`, and one narrow `IUnitOfWork`. Read ports return DTOs rather than entities or `IQueryable`. The accepted BR-REG-02 limitation is that per-user count checks do not serialize concurrent orders by the same user.
+
+Browser → MVC Controllers → Application services → Infrastructure adapters/EF Core DbContext → PostgreSQL. Controllers return server-rendered Razor Views; no separate frontend or JSON API exists. Web is the composition root and depends on Application and Infrastructure; Application depends on Domain. Infrastructure owns persistence, seed/reset, clock, password/code/log adapters, and the maintenance worker. Web owns cookie authentication, principal-backed `ICurrentUser`, HTTP result mapping, ViewModels, controllers, and Razor views.
 
 ## Cross-cutting concerns
 

@@ -1,54 +1,124 @@
-# Product context for agents
+# ECMA — Context cho coding agent
 
-This is a navigation aid, not a replacement for [SRS_ECMA.md](SRS_ECMA.md). Read the referenced section's full FR/BR tables and SRS §3.13.1 permissions when implementing. M is mandatory; S is Should, not a license to implement unrelated scope.
+## 1. Cách sử dụng và nguồn yêu cầu
 
-## Actors and stable rules
+Đây là bản định hướng để agent tìm đúng yêu cầu, giữ đúng scope và tránh lỗi triển khai. Không thay thế SRS hoặc mô tả use case.
 
-Guest browses/searches public events. Registration creates Active Attendee. Admin grants Organizer/Staff roles; Organizer assigns Staff to events. Each user has one role; Admin is seeded and at least one Active Admin must remain. Organizer operations are owner-scoped, Staff operations assignment-scoped. Role changes take effect next request; disabling invalidates existing sessions immediately.
+- Nguồn nghiệp vụ và nghiệm thu: [SRS_ECMA.md](SRS_ECMA.md), mục 1–9.
+- Nguồn kiến trúc: SRS mục 10, đã tích hợp ADR 0001–0004.
+- Luồng thao tác chi tiết: [ECMA_Use_Case.md](ECMA_Use_Case.md), 24 use case.
+- Trước khi triển khai một chức năng, đọc đầy đủ FR/BR liên quan, ma trận quyền ở SRS mục 3.9 và bảng xử lý lỗi tương ứng ở mục 4. Không triển khai chỉ từ bản tóm tắt này.
+- Tất cả FR trong SRS hiện tại đều bắt buộc; không còn phân loại Mandatory/Should của scope cũ.
+- Khi tài liệu mâu thuẫn và chưa có quyết định rõ, chỉ hỏi vấn đề đang chặn công việc; không tự thêm quy tắc nghiệp vụ. Quyết định mới cần được ghi lại và đối chiếu với SRS.
 
-Username is the identity, not email. No email, notifications, real payment, password recovery, 2FA/social login, QR scanning, waitlists, discounts, standalone speaker/room/track/session entities, mobile app, or mobile-responsive requirement. Inline operation feedback is explicitly permitted.
+Các liên kết trên giả định tài liệu nằm cùng thư mục với file này. Nếu repo dùng đường dẫn khác, tìm đúng tài liệu theo tên trước khi làm việc.
 
-Conference is an Event with the fixed Conference tag, not a separate entity/workflow. Seed the 13 SRS §3.4 tags; events have 1–5 distinct tags. Location/speaker/contact details live in description.
+## 2. Sản phẩm và giới hạn scope
 
-Store instants in UTC; show Asia/Ho_Chi_Minh. Prices are integer VND. Event/order/ticket transitions, cancellation/refunds, concurrent inventory, and ownership require server enforcement. Ticket ownership belongs to the buyer, not separately entered attendees. Pending orders hold inventory 10 minutes; Valid/Used plus Pending tickets count toward the 10-ticket per-user/event limit. Multi-step order operations are transactional and minute jobs idempotent.
+ECMA quản lý sự kiện/hội nghị trực tiếp theo luồng:
 
-## Requirement map and dependencies
+**Tạo Event → lập chương trình → công bố → đăng ký tham dự → quản lý người tham dự → điểm danh → xem thống kê của Event.**
 
-| SRS section / ID family | Area | Dependencies to inspect |
+- Mọi sự kiện miễn phí. Mỗi tài khoản đăng ký đúng một suất cho chính mình tại mỗi Event; xác nhận ngay, không chờ duyệt.
+- Chỉ có ba vai trò lưu trong tài khoản: Attendee, Organizer, Admin. Guest là người chưa đăng nhập.
+- Conference là Event có `type = Conference`, dùng chung mô hình/luồng; phải có ít nhất một mục chương trình hợp lệ trước khi công bố. Không phân biệt Conference bằng tag.
+- Giao diện tiếng Việt, trình duyệt desktop từ 1024 px. Thông báo kết quả thao tác trên trang vẫn bắt buộc.
+- Không thêm bán vé/loại vé/đơn hàng/thanh toán giả lập/giữ chỗ/hoàn tiền; Staff/phân công; tag; dashboard/biểu đồ/báo cáo/xuất CSV; upload ảnh/avatar/ảnh bìa; thêm người tham dự thủ công/đăng ký hộ/chuyển suất.
+- Không thêm email/thông báo tự động/quên mật khẩu/social login/2FA/QR/waitlist; lịch cá nhân; hoàn tác điểm danh; điểm danh sớm; thực thể diễn giả/phòng/track; chương trình song song/đăng ký từng phiên; bản đồ/mobile/responsive mobile; giao diện audit log.
+- Không có unpublish, đổi chủ sở hữu, mở lại Event, hoặc job nền chuyển Completed. Những giới hạn ở SRS mục 9 là quyết định đã chấp nhận, không phải tính năng còn thiếu.
+
+## 3. Stack và ranh giới kiến trúc
+
+Một ứng dụng triển khai: **ASP.NET Core MVC, .NET 10, Razor Views, EF Core, PostgreSQL, Tailwind CSS v4; Bun để cài dependency/build CSS**.
+
+| Project | Tham chiếu | Trách nhiệm |
 |---|---|---|
-| §3.1 `FR-AUTH-01..06` | Registration/login/logout/password/session | User persistence, hashing/session decision; ROLE status semantics |
-| §3.2 `FR-PROF-01..05` | Profile/avatar/order history | AUTH; REG for ticket/order history |
-| §3.3 `FR-EVT-01..11` | Event lifecycle/public details | AUTH/ROLE, CONF tags; TKT before publish; SCH/TKT validation on edits; REG refunds on cancel; timed completion |
-| §3.4 `FR-CONF-01..04` | Fixed tags/Conference badge | Tag seed, EVT; SRCH shortcut |
-| §3.5 `FR-SRCH-01..08` | Search/filter/sort/paging | EVT visibility/status, CONF, TKT pricing/stock |
-| §3.6 `FR-REG-01..09` | Orders/mock payment/holds/tickets/cancel | AUTH/ROLE, EVT, TKT, atomic stock handling, expiry jobs |
-| §3.7 `FR-PART-01..07` | Participants/manual issue/cancel/CSV | ROLE ownership, REG/TKT, ATT status |
-| §3.8 `FR-SCH-01..06` | Timeline/personal schedule | EVT bounds/status, ROLE ownership, REG tickets |
-| §3.9 `FR-TKT-01..06` | Ticket types/codes/stock/revenue | EVT capacity/time, ROLE ownership, REG purchase/holds |
-| §3.10 `FR-ATT-01..06` | Check-in/undo/statistics | ROLE assignments, EVT window/status, REG/TKT state |
-| §3.11 `FR-DASH-01..04` | Role dashboards | Implemented event/ticket/check-in data; consistent RPT calculations |
-| §3.12 `FR-RPT-01..06` | Reports/CSV | ROLE, EVT/CONF, captured prices, REG refunds, ATT |
-| §3.13 `FR-ROLE-01..05` | Users/roles/status/Staff assignment | AUTH sessions, EVT published ownership restrictions |
+| `src/ECMA.Domain` | Không có | Bốn thực thể nghiệp vụ, enum, quy tắc miền, domain exceptions; chỉ thư viện chuẩn .NET |
+| `src/ECMA.Application` | Domain | Use-case services, DTO/filter, repository interfaces, `Result`/`Error`, một `AccessPolicy` và các abstraction |
+| `src/ECMA.Infrastructure` | Application, Domain | EF Core/Npgsql, repositories, migrations, adapter hashing, đồng hồ và sinh mã/stamp |
+| `src/ECMA.Web` | Application, Infrastructure | Composition root/DI, MVC Controllers, ViewModels/Razor Views, cookie/antiforgery, ánh xạ lỗi, CSS |
 
-Dependencies do not require implementing whole modules upfront: include only prerequisites needed for the requested slice, with an explicit plan. The SRS has no standalone `FR-05`; multiple modules have a requirement numbered 05.
+- Controllers gọi Application, không truy vấn DbContext trực tiếp. Domain/Application không phụ thuộc EF Core, MVC, HTTP hoặc Web/Infrastructure.
+- Application kiểm tra quyền qua một `AccessPolicy` với dữ liệu người thao tác hiện tại; không chỉ ẩn nút hoặc kiểm tra ở Controller. HTTP status, redirect và thông báo tiếng Việt thuộc Web.
+- Repository interfaces phục vụ User, Event, AgendaItem, Registration. Không dựng generic repository, MediatR hoặc framework CQRS. `IUnitOfWork` phục vụ save và transaction boundaries.
+- Application dùng `IClock`, `IPasswordService`, `IRegistrationCodeGenerator`, `ISecurityStampGenerator`. Infrastructure cung cấp implementation thật; fake chỉ dùng trong kiểm thử. Application không gọi trực tiếp Identity hoặc tự sinh mã/stamp bằng random/Guid.
+- Không tách frontend/backend, thêm SPA/React/Next.js/JWT hoặc API nội bộ để phục vụ Razor. Endpoint JSON chỉ thêm khi có yêu cầu cụ thể.
+- Razor dùng MVC Tag Helpers và Tailwind v4 biên dịch cục bộ qua `@tailwindcss/cli` bằng Bun. CSS xuất dưới `wwwroot`, được layout nạp và có trong artifact publish; khóa dependency bằng manifest/lockfile. Không dùng Bootstrap/CDN runtime hoặc pipeline Tailwind v3.
 
-Conceptual entities (SRS §6): User, Event, Tag, EventTag, TimelineItem, TicketType, Order, OrderItem, Ticket, Checkin, EventStaff. None are currently implemented. Do not duplicate the detailed schema here.
+Đây là kiến trúc đích, không phải khẳng định về code hiện có. Kiểm tra repo trước khi mô tả project, dependency, pipeline hoặc chức năng đã triển khai.
 
-## Conflicts and unresolved decisions
+## 4. Bản đồ yêu cầu và use case
 
-Resolve only questions that block the requested feature; record significant accepted answers in `docs/decisions/`. Do not guess:
+| SRS | FR | Use case | Phụ thuộc cần đọc |
+|---|---|---|---|
+| 3.1 Tài khoản/hồ sơ | `FR-AUTH-01..06` | `UC-AUTH-01..05` | USER, phiên/stamp; điều hướng/seed ở 4.1; hashing/idle timeout ở 10.2 |
+| 3.2 Event | `FR-EVT-01..07` | `UC-EVT-01..06` | AUTH/USER, SCH khi sửa/công bố, REG khi hủy; trạng thái hiệu lực |
+| 3.3 Chương trình | `FR-SCH-01..03` | `UC-SCH-01` | EVT, quyền sở hữu, khóa chương trình và thao tác đồng thời |
+| 3.4 Tra cứu | `FR-SRCH-01..03` | `UC-SRCH-01..02` | EVT, REG để tính chỗ, quyền xem riêng theo BR-SRCH-04 |
+| 3.5 Đăng ký | `FR-REG-01..04` | `UC-REG-01..03` | AUTH, EVT, sức chứa, nguồn hủy; thứ tự lỗi 4.3/4.5 |
+| 3.6 Người tham dự/thống kê | `FR-PART-01..04` | `UC-PART-01..03` | Quyền quản lý EVT, REG, ATT; thống kê toàn Event |
+| 3.7 Điểm danh | `FR-ATT-01..03` | `UC-ATT-01` | EVT/REG, quyền quản lý, cửa sổ thời gian; thứ tự lỗi 4.4 |
+| 3.8 Người dùng/quyền | `FR-USER-01..03` | `UC-USER-01..03` | AUTH, Event của chủ sở hữu, Admin Active cuối cùng |
 
-1. **Architecture conflict, resolved for this setup:** SRS §2.1 diagrams Frontend/REST API; §4.3 suggests API endpoints and several security clauses say API. The explicit brief requires SSR MVC, which the existing project uses. [Decision 0001](../decisions/0001-server-rendered-mvc.md) adopts MVC/Razor; whether the course separately requires JSON API tests/endpoints still needs user confirmation before any API work.
-2. **Authentication choice, resolved:** The user selected cookie authentication and database-stored `Microsoft.AspNetCore.Identity.PasswordHasher<TUser>` hashes. [Decision 0002](../decisions/0002-cookie-authentication-password-hashing.md) explicitly overrides BR-AUTH-08's bcrypt/argon2 wording with Identity PBKDF2. Login/registration redirect, Admin seed credential provisioning, and the implementation of immediate status/role invalidation and exact idle timeout remain to be settled. No email/reset flow is allowed.
-3. **Event cancellation with Used tickets:** BR-EVT-08 says cancel Valid tickets and Orders/refund; BR-TKT-08 disallows Used state changes except undo and BR-PART-03 disallows cancelling Used. Decide the Order/refund outcome when an event with check-ins is cancelled.
-4. **Organizer cancellation policy:** FR-PART-06 permits participant cancellation with reason but does not say whether the Attendee ≥24-hour rule applies. Clarify time/status limits for privileged cancellation.
-5. **Manual free ticket against priced type:** FR-PART-05 grants a free ticket while BR-PART-06 consumes selected TicketType stock. Decide allowable types, zero-price Order/OrderItem representation, and enforcement of per-user/event limits and sale/event windows.
-6. **Sold/held accounting:** Define whether “has sold tickets” includes subsequently cancelled/refunded tickets, how Pending holds affect quantity reductions/unpublish/type deletion, and whether `TicketType.sold` is historical or current. Capacity and race safety still apply.
-7. **UI language and labels:** SRS permits English or Vietnamese, consistently; current template is English. Choose before shipping product UI. Gender values and username/password Unicode/whitespace interpretation beyond the explicit rules also need definition where relevant.
-8. **Permissions presentation:** §4.1 labels some screens Attendee/Organizer while §3.13.1 gives broader Admin/Staff rights; §3.7 heading omits Staff read-only access present in the matrix. Do not silently deny matrix permissions or infer new ones; resolve contradictions when implementing those screens.
-9. **Reporting/time edges:** Which timestamp date filters and sales-by-day groupings use, cancelled-ticket inclusion in “sold,” exact sale/check-in/hold-expiry endpoint inclusivity, and date-range timezone interpretation are not fully specified. Use explicit rules where given (≥24-hour cancellation, timeline touching allowed); obtain decisions for unspecified edges.
-10. **Check-in history:** Undo must be recorded (BR-ATT-06), but the suggested Checkin schema only provides `is_undone`, not undo actor/time. Decide minimal history fields and repeat check-in representation. Operational/check-in records do not imply the excluded general audit-log feature.
+Phụ thuộc không có nghĩa phải triển khai toàn bộ module trước. Làm các tiền đề cần thiết cho chức năng được giao. Truy vết bằng ID đầy đủ; không dùng mã mơ hồ như `FR-05`.
 
-Performance requirements (NFR-01/02), seed/reset (NFR-12), and controllable time (NFR-13) need verifiable checks as their supporting features are built; this documentation setup does not implement them.
+## 5. Quyền và xác thực cần giữ đúng
 
-Frontend technology is settled: Razor `.cshtml` plus Tailwind CSS v4 per [decision 0003](../decisions/0003-razor-tailwind-styling.md). UI language remains unresolved. Tailwind dependencies are installed, but the template still renders Bootstrap and has no Tailwind compilation pipeline.
+- Tài khoản mới là Attendee Active. Mỗi User có đúng một vai trò. Organizer quản lý Event mình sở hữu; Admin quản lý mọi Event nhưng vẫn phải tuân trạng thái/thời gian. Admin tạo Event thì chính Admin đó là chủ sở hữu.
+- Mọi tài khoản Active có chức năng cá nhân. Organizer/Admin được đăng ký Event người khác, không được đăng ký Event của chính mình. User/owner/source của thao tác lấy từ máy chủ, không tin giá trị trình duyệt chọn.
+- Username là định danh đăng nhập, lưu chữ thường và duy nhất; không dùng email. Hồ sơ chỉ có username, họ tên, vai trò; chỉ cho cập nhật họ tên.
+- Dùng cookie authentication; `UseAuthentication` trước `UseAuthorization`. Cookie HttpOnly, SameSite=Lax và Secure trên môi trường HTTPS. Mọi thao tác thay đổi dữ liệu phải chống CSRF.
+- `IPasswordService` bọc Identity `PasswordHasher<TUser>`/`VerifyHashedPassword`, trả Failed/Verified/VerifiedNeedsRehash. Rehash sau xác minh thành công không được ghi đè password/stamp mới nếu có đổi password đồng thời.
+- Mỗi request có xác thực kiểm tra trạng thái/vai trò/stamp từ dữ liệu có thẩm quyền. Inactive hoặc stamp cũ bị từ chối từ request tiếp theo. Đổi password cập nhật hash và stamp nguyên tử, thu hồi mọi phiên cũ và xóa phiên đang thao tác.
+- Idle timeout là **30 phút từ request xác thực hợp lệ gần nhất của từng phiên**, kể cả request sau đó trả 400/403/409; file tĩnh không tính. Tại `now - last_activity_at ≥ 30 phút`, từ chối trước khi gia hạn. Không chỉ dựa vào sliding expiration mặc định; triển khai renew mỗi request hợp lệ theo SRS 10.2. Request đồng thời không được làm lùi mốc hoạt động/hạn phiên.
+- Đăng ký tài khoản xong về đăng nhập, không tự đăng nhập. Login dùng returnUrl nội bộ an toàn, đích GET được cho phép và có quyền; sai thì bỏ qua. Mặc định Attendee về tra cứu, Organizer/Admin về danh sách quản lý tương ứng. Guest đi từ đăng ký tham dự phải quay về chi tiết Event và bấm xác nhận, không tự đăng ký sau login.
+- Seed Admin vận hành lấy credential từ cấu hình, không ghi password vào source/log; chạy lại không tạo trùng hoặc ghi đè tài khoản. Credential mẫu công khai chỉ dành cho seed kiểm thử.
+- Luôn giữ ít nhất một Admin Active, kể cả khi nhiều Admin đổi quyền/trạng thái đồng thời. Không hạ Organizer/Admin xuống Attendee hoặc vô hiệu hóa chủ sở hữu còn Draft chưa xóa hoặc Published chưa kết thúc. Đổi quyền/vô hiệu hóa và tạo Event phải tương đương một thứ tự tuần tự hợp lệ.
+
+## 6. Trạng thái, dữ liệu và bất biến trọng yếu
+
+### Event và chương trình
+
+- CSDL lưu Draft/Published/Cancelled. **Completed suy ra** khi Published và `now ≥ end_at`; dùng nhất quán trong hiển thị, lọc, thống kê và điều kiện nghiệp vụ. Draft quá giờ không tự Completed.
+- Draft được sửa mọi trường, sửa chương trình, công bố hoặc xóa mềm. Tạo/sửa/công bố phải bảo đảm bắt đầu ở tương lai; Event dài 5 phút–30 ngày, capacity 1–10.000.
+- Published trước giờ bắt đầu: chỉ sửa tiêu đề/mô tả/địa điểm và giữ nguyên/tăng capacity; khóa loại/thời gian/chương trình. So sánh capacity với dữ liệu hiện tại lúc ghi. Đổi địa điểm cần xác nhận **ở UI**, không có cờ server bắt buộc.
+- Từ giờ bắt đầu khóa mọi trường; chỉ xem/điểm danh trong thời gian đang diễn ra. Cancelled/Completed chỉ xem. Chỉ hủy Published khi `now < start_at`, lý do 1–200 ký tự.
+- Hủy Event lưu người/thời điểm/lý do ngay cả khi không có Registration; hủy mọi Confirmed nguồn EVENT trong cùng thao tác nguyên tử, giữ nguyên các Cancelled cũ.
+- Agenda tối đa 50 mục; mỗi mục ít nhất 5 phút, nằm hoàn toàn trong Event. Chồng lấn khi `A.start < B.end AND B.start < A.end`; chạm biên được phép. Khi sửa không so với chính mục đó. Đổi thời gian Draft làm chương trình ra ngoài khoảng mới phải bị từ chối, không tự dời/cắt/xóa.
+
+### Registration và điểm danh
+
+- Bốn thực thể nghiệp vụ: **User, Event, AgendaItem, Registration**. Đọc schema/bất biến ở SRS mục 6; cho phép trường/bảng kỹ thuật cần cho framework, phiên hoặc đồng thời.
+- CSDL có unique username chuẩn hóa, mã Registration và `(event_id, user_id)`. Mã `REG-` + 12 chữ hoa ASCII/chữ số, ngẫu nhiên, duy nhất toàn hệ thống; không phải bằng chứng phân quyền.
+- Registration chỉ Confirmed/Cancelled; điểm danh bằng cặp `checked_in_at`/`checked_in_by`, không có Used hoặc bảng lịch sử điểm danh.
+- Gửi đăng ký lặp trên Confirmed trả bản ghi hiện có sau kiểm tra xác thực/khả năng xem/quyền, kể cả đã đủ chỗ hoặc đóng đăng ký. Đăng ký mới/đăng ký lại cần Published, `now < start_at`, còn chỗ và không phải chủ sở hữu.
+- Nguồn hủy do server xác định: SELF khi tự hủy, MANAGER khi hủy qua thao tác quản lý, EVENT khi hủy Event. Admin hủy đăng ký của mình qua màn hình quản lý vẫn là MANAGER.
+- Chỉ SELF được đăng ký lại: giữ ID/mã, cập nhật `registered_at`, xóa trường hủy. MANAGER chặn đăng ký lại vĩnh viễn tại Event đó; không có gỡ chặn. Không lưu lịch sử từng lần hủy/đăng ký lại.
+- Hủy mới cần Confirmed, chưa điểm danh, Published và `now < start_at`. Tự hủy dùng lý do hệ thống; quản lý hủy cần lý do 1–200 ký tự. Hủy lặp ưu tiên kết quả “Đã hủy” sau kiểm tra bản ghi/quyền, trước trạng thái/thời gian/lý do; không sửa nguồn hoặc trả thêm chỗ.
+- Điểm danh chỉ khi Published và `start_at ≤ now < end_at`, đúng Event, Confirmed và chưa điểm danh. Chuẩn hóa mã rồi đổi chữ thường ASCII thành hoa. Request đồng thời chỉ ghi một lần; lần đầu phải được giữ nguyên. Không hoàn tác.
+- Inactive/đổi vai trò không tự hủy Registration hoặc mất điểm danh. Confirmed của Inactive vẫn chiếm chỗ và có thể điểm danh nếu đủ điều kiện.
+- Chỗ còn lại = capacity − số Confirmed, gồm cả đã điểm danh. Thống kê tính toàn Event, không theo bộ lọc/phân trang; số đã hủy là số bản ghi hiện Cancelled. Công thức tỷ lệ/vắng mặt theo SRS 3.6, không lưu các số suy ra thành nguồn dữ liệu độc lập.
+
+## 7. Dữ liệu đầu vào, quyền xem và thứ tự lỗi
+
+- Lưu thời điểm UTC, nhập/hiển thị Asia/Ho_Chi_Minh. Dùng `IClock`; lấy một `now` sau khi chờ quyền truy cập dữ liệu, ngay trước kiểm tra/cập nhật và dùng chung trong thao tác. Không tin đồng hồ trình duyệt hoặc kết quả kiểm tra cũ trên form.
+- Văn bản: NFC → trim → validate theo Unicode code point; plain text. Password/xác nhận giữ nguyên, không NFC/trim; returnUrl dùng quy tắc riêng. Đọc độ dài/regex đầy đủ trong SRS.
+- Tìm chuỗi con, không phân biệt hoa/thường nhưng phân biệt dấu; không cho wildcard người dùng. Bộ lọc kết hợp AND, ngày bắt đầu lọc theo UTC+7 gồm hai biên.
+- Danh sách phân trang 20 dòng; thiếu page dùng 1. Page được gửi phải là một giá trị `^[0-9]+$`, trong 1–2.147.483.647; sai trả 400, không tự về trang 1. Trang hợp lệ vượt số trang trả rỗng; đổi bộ lọc ở UI về trang 1. Agenda hiển thị toàn bộ.
+- Danh sách công khai chỉ Published với `now < end_at`, gồm đang diễn ra/đủ chỗ. Khi `now ≥ start_at`, tình trạng ưu tiên “Đã đóng đăng ký”. Quy tắc sort/filter từng màn hình theo SRS, không áp dụng một thứ tự chung.
+- Draft: mọi Admin xem được, Organizer chỉ Draft mình sở hữu. Cancelled/Completed: Admin, Organizer sở hữu hoặc người từng đăng ký được xem, với phiên hợp lệ/Active. Chi tiết không được xem trả 404, kể cả Guest, không redirect chỉ vì Event bị ẩn. Không công khai người tham dự/mã đăng ký.
+- Thao tác ghi cần đăng nhập: **xác thực → định dạng ID → tồn tại/khả năng nhìn thấy → quyền thao tác → dữ liệu/quy tắc nghiệp vụ**. Không để kiểm tra role trả 403 sớm làm lộ Event cần 404.
+- Đọc và tuân đúng bảng SRS **4.3 đăng ký, 4.4 điểm danh, 4.5 hủy đăng ký**, dừng ở lỗi đầu tiên; không đảo thứ tự hoặc gộp lý do. Quyền/thời gian điểm danh được kiểm tra trước tra mã.
+- HTTP/redirect áp dụng cho MVC: phiên không hợp lệ 302 về login; dữ liệu sai 400; không thấy/bị ẩn 404; thiếu quyền trên bản ghi nhìn thấy 403; xung đột nghiệp vụ 409. Form login hợp lệ nhưng sai credential/Inactive render **200**; password hiện tại sai khi đổi password trả **400**. Nội dung thông báo cố định lấy nguyên từ SRS, không tự diễn đạt lại.
+
+## 8. Thực hiện và kiểm chứng
+
+1. Kiểm tra repo và hướng dẫn agent hiện có; xác định đúng tài liệu, chức năng được giao, FR/BR/UC và tiền đề cần làm.
+2. Triển khai qua các lớp đã chốt; giữ scope. Không dựng thêm framework hoặc module chỉ để chuẩn bị cho nhu cầu chưa có.
+3. Với thao tác ghi, kiểm tra/cập nhật nguyên tử trên dữ liệu hiện tại; kiểm tra quyền lúc ghi khi có cạnh tranh. Chỉ có transaction hoặc unique constraint chưa đủ chứng minh mọi bất biến đúng.
+4. Kiểm thử nhánh thành công, quyền sở hữu, trạng thái/thời gian tại biên, lỗi đồng thời cùng đúng, request trực tiếp và các race liên quan. Không chỉ kiểm thử tuần tự hoặc trạng thái UI.
+5. Truy vết kết quả tới FR/BR/NFR; báo rõ thay đổi, kiểm chứng đã chạy và phần còn thiếu. Không khẳng định hoàn thành từ mock hoặc khi chưa có bằng chứng.
+
+Các race bắt buộc xem SRS NFR-04, mục 7.2–7.3: tranh suất cuối/đăng ký trùng; đăng ký với hủy Event/tăng capacity; điểm danh cùng mã; Publish với sửa/thêm/xóa agenda/đổi thời gian/Delete; thay đổi agenda với nhau; tăng capacity với nhau; đổi vai trò/vô hiệu hóa với tạo Event; bảo vệ Admin Active cuối cùng. Kết quả phải tương đương một thứ tự hợp lệ, không cập nhật một phần.
+
+Nghiệm thu gồm toàn bộ FR, BR tương ứng và NFR-01..08. Seed/reset và đồng hồ thay thế chỉ dùng cho kiểm thử; dữ liệu mẫu theo SRS 7.1. Đo NFR-05 đúng bộ dữ liệu/mức tải/môi trường đã nêu; kiểm tra Chrome/Edge desktop theo NFR-06. Kiểm tra project references và pipeline CSS/publish riêng theo mục 10.5; không tính chúng thành FR mới.

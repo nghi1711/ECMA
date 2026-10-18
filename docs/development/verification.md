@@ -14,7 +14,11 @@ dotnet run --project src/ECMA.Web/ECMA.Web.csproj --launch-profile http --no-bui
 
 The HTTP profile serves `http://localhost:5028`; the HTTPS profile uses `https://localhost:7076` and HTTP 5028. HTTP-only development may log a missing HTTPS-port warning because HTTPS redirection is configured; use the HTTPS profile with a trusted development certificate when testing HTTPS. Do not suppress production HTTPS protections.
 
-`dotnet test` may exit successfully with no tests: report zero tests rather than a passing suite. Future test projects belong under `tests/`, must be added to the solution's `tests` folder, and need the smallest suitable runner. No runner is selected by this setup.
+Use a disposable PostgreSQL database through `ConnectionStrings:ECMA`. Seed with `dotnet run --project src/ECMA.Web -- --seed`; reset and reseed with `--reset-db`. Reset scripts reject database names without `dev` or `test`.
+
+`tests/ECMA.E2E.Tests` is intentionally an empty buildable project reserved for Task 05. `dotnet test` can exit successfully with zero tests; report zero rather than a passing suite.
+
+Test hooks are disabled by default. In a non-Production environment set `TestHooks:Enabled=true` and a non-empty `TestHooks:Token`, then send that token in `X-Test-Token` to `POST /__test/reset`, `/__test/clock` (`instant`, `advanceMinutes`, or `reset` form values), or `/__test/run-jobs`. Disabled or invalid-token requests return 404. Startup fails if hooks are enabled in Production.
 
 ## Per-feature checklist
 
