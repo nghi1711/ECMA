@@ -11,6 +11,29 @@
 - Tất cả FR trong SRS hiện tại đều bắt buộc; không còn phân loại Mandatory/Should của scope cũ.
 - Khi tài liệu mâu thuẫn và chưa có quyết định rõ, chỉ hỏi vấn đề đang chặn công việc; không tự thêm quy tắc nghiệp vụ. Quyết định mới cần được ghi lại và đối chiếu với SRS.
 
+### Task còn mở
+
+Trước khi lập kế hoạch hoặc sửa code, quét frontmatter của mọi file `tasks/*.md`:
+
+1. Đọc `name`, `description`, `status`, `related` và `depends_on` để lọc.
+2. Bỏ qua task có `status: completed` và task có `description` không liên quan đến chức năng đang làm.
+3. Đọc toàn bộ nội dung task còn mở có liên quan (`pending`, `blocked` hoặc `in_progress`), rồi đưa dependency/blocker của chúng vào kế hoạch.
+4. Không tự triển khai task `blocked` khi dependency chưa tồn tại. Khi hoàn tất đủ điều kiện nghiệm thu, đổi `status` thành `completed`; không xóa file để còn lịch sử quyết định.
+
+Mỗi file task phải có YAML frontmatter tối thiểu:
+
+```yaml
+---
+name: Tên ngắn của task
+description: Mô tả đủ để agent quyết định task liên quan hay không mà chưa cần đọc toàn bộ file.
+status: pending # pending | blocked | in_progress | completed
+related:
+  - FR/BR/UC/NFR hoặc module liên quan
+depends_on:
+  - Dependency cần có; để [] nếu không có
+---
+```
+
 Các liên kết trên giả định tài liệu nằm cùng thư mục với file này. Nếu repo dùng đường dẫn khác, tìm đúng tài liệu theo tên trước khi làm việc.
 
 ## 2. Sản phẩm và giới hạn scope
