@@ -1,3 +1,4 @@
+using EMCA.Application.Interfaces;
 using EMCA.Application.Services;
 using ECMA.Infrastructure;
 using ECMA.Infrastructure.Data;
@@ -10,14 +11,26 @@ var builder = WebApplication.CreateBuilder(args);
 if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") != "true")
 {
     var envFile = FindFileUpward(builder.Environment.ContentRootPath, ".env");
-    var connectionString = envFile is null ? null : ReadEnvValue(envFile, "ECMA_CONNECTION_STRING");
-    if (string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("ECMA")) && !string.IsNullOrWhiteSpace(connectionString))
-        builder.Configuration["ConnectionStrings:ECMA"] = connectionString;
+    if (envFile is not null)
+    {
+        SetFromEnvFileIfMissing("ConnectionStrings:ECMA", "ECMA_CONNECTION_STRING");
+        SetFromEnvFileIfMissing("Seed:AdminUsername", "SEED_ADMIN_USERNAME");
+        SetFromEnvFileIfMissing("Seed:AdminFullName", "SEED_ADMIN_FULL_NAME");
+        SetFromEnvFileIfMissing("Seed:AdminPassword", "SEED_ADMIN_PASSWORD");
+    }
+
+    void SetFromEnvFileIfMissing(string configurationKey, string envKey)
+    {
+        var value = ReadEnvValue(envFile, envKey);
+        if (string.IsNullOrWhiteSpace(builder.Configuration[configurationKey]) && !string.IsNullOrWhiteSpace(value))
+            builder.Configuration[configurationKey] = value;
+    }
 }
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<AuthCookieService>();
 builder.Services.AddScoped<AuthSessionStore>();
 
