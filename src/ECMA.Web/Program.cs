@@ -33,6 +33,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<AuthCookieService>();
 builder.Services.AddScoped<AuthSessionStore>();
+builder.Services.AddSingleton(new VietnamLocationCatalog(builder.Environment.ContentRootPath));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

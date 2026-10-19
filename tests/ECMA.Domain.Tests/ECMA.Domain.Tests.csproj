@@ -15,5 +15,6 @@
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\src\EMCA.Application\EMCA.Application.csproj" />
+      <ProjectReference Include="..\..\src\ECMA.Web\ECMA.Web.csproj" />
     </ItemGroup>
 </Project>

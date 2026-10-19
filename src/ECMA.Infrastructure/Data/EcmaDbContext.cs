@@ -7,9 +7,13 @@ namespace ECMA.Infrastructure.Data;
 public sealed class EcmaDbContext(DbContextOptions<EcmaDbContext> options) : DbContext(options)
 {
     public DbSet<User> Users => Set<User>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<AgendaItem> AgendaItems => Set<AgendaItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new EventConfiguration());
+        modelBuilder.ApplyConfiguration(new AgendaItemConfiguration());
     }
 }

@@ -12,6 +12,12 @@ public sealed class UserRepository(EcmaDbContext context) : IUserRepository
         return await context.Users.FindAsync([id], cancellationToken);
     }
 
+    public async Task<User?> FindByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await context.Database.ExecuteSqlInterpolatedAsync($"SELECT id FROM users WHERE id = {id} FOR UPDATE", cancellationToken);
+        return await context.Users.FindAsync([id], cancellationToken);
+    }
+
     public async Task<User?> FindByUsernameAsync(string normalizedUsername, CancellationToken cancellationToken = default)
     {
         return await context.Users.FirstOrDefaultAsync(u => u.Username == normalizedUsername, cancellationToken);

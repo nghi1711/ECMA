@@ -17,6 +17,8 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IEventRepository, EventRepository>();
+        services.AddScoped<EMCA.Application.Interfaces.IEventService, EMCA.Application.Services.EventService>();
         services.AddScoped<IPasswordService, PasswordHasherAdapter>();
         services.AddScoped<ISecurityStampGenerator, SecurityStampGenerator>();
         services.AddScoped<IClock, Clock>();
