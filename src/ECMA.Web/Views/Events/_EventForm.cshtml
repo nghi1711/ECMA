@@ -34,7 +34,13 @@
         <label asp-for="WardCode">Xã/phường <span aria-hidden="true">*</span></label>
         <select asp-for="WardCode" required data-ward>
             <option value="">Chọn xã/phường</option>
-            @foreach (var province in Model.Provinces) foreach (var ward in province.Wards) { <option value="@ward.Code" data-province-code="@province.Code">@ward.Name</option> }
+            @foreach (var province in Model.Provinces)
+            {
+                foreach (var ward in province.Wards)
+                {
+                    <option value="@ward.Code" data-province-code="@province.Code">@ward.Name</option>
+                }
+            }
         </select>
         <span asp-validation-for="WardCode"></span>
     </div>

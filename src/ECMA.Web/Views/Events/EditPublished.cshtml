@@ -12,7 +12,18 @@
 <div class="field form-grid-full" data-vietnam-location data-original-location="@Model.OriginalLocation">
 <label asp-for="StreetAddress">Số nhà, tòa nhà, tên đường <span aria-hidden="true">*</span></label><input asp-for="StreetAddress" maxlength="200" required data-street-address /><span asp-validation-for="StreetAddress"></span>
 <label asp-for="ProvinceCode">Tỉnh/thành <span aria-hidden="true">*</span></label><select asp-for="ProvinceCode" required data-province><option value="">Chọn tỉnh/thành</option>@foreach (var province in Model.Provinces) { <option value="@province.Code">@province.Name</option> }</select><span asp-validation-for="ProvinceCode"></span>
-<label asp-for="WardCode">Xã/phường <span aria-hidden="true">*</span></label><select asp-for="WardCode" required data-ward><option value="">Chọn xã/phường</option>@foreach (var province in Model.Provinces) foreach (var ward in province.Wards) { <option value="@ward.Code" data-province-code="@province.Code">@ward.Name</option> }</select><span class="field-hint">Nếu thay đổi, hệ thống yêu cầu xác nhận trước khi gửi.</span><span asp-validation-for="WardCode"></span>
+<label asp-for="WardCode">Xã/phường <span aria-hidden="true">*</span></label>
+<select asp-for="WardCode" required data-ward>
+    <option value="">Chọn xã/phường</option>
+    @foreach (var province in Model.Provinces)
+    {
+        foreach (var ward in province.Wards)
+        {
+            <option value="@ward.Code" data-province-code="@province.Code">@ward.Name</option>
+        }
+    }
+</select>
+<span class="field-hint">Nếu thay đổi, hệ thống yêu cầu xác nhận trước khi gửi.</span><span asp-validation-for="WardCode"></span>
 </div>
 <div class="field"><label asp-for="Capacity">Sức chứa <span aria-hidden="true">*</span></label><input asp-for="Capacity" type="number" min="1" max="10000" required /><span class="field-hint">Không được giảm sức chứa hiện tại.</span><span asp-validation-for="Capacity"></span></div>
 </div>
