@@ -1,6 +1,6 @@
 # ECMA — Events and Conferences Management Application
 
-ECMA is a desktop-browser web application for organizing events and conferences, registering attendees, managing tickets, and tracking attendance. Inspired by Eventbrite, it is developed as a **Software Verification & Validation course project**.
+ECMA is a desktop-browser web application for organizing events and conferences, registering attendees, managing tickets, and tracking attendance.
 
 The goal is a minimal, usable event-management system with clear business rules that support requirement-based testing: boundary values, equivalence partitioning, state transitions, and decision tables.
 
@@ -27,8 +27,6 @@ Conferences use the same workflow as events: a conference is an event tagged **C
 - The target is current desktop Chrome, Firefox, and Edge, with a minimum viewport width of 1024 px.
 
 ## Technology and current status
-
-**The repository currently contains an ASP.NET Core MVC template, not an implemented event-management system.** Home, Privacy, and Error pages exist; domain features, persistence, authentication, and automated tests do not yet exist.
 
 | Area | Technology / status |
 |---|---|
@@ -69,8 +67,6 @@ For frontend dependency work, install [Bun](https://bun.sh/) and run `bun instal
 ```shell
 dotnet test ECMA.sln --no-build
 ```
-
-There are currently **zero test projects**. A successful command with no tests is not evidence that product features work. See the [verification guide](docs/development/verification.md) for runtime checks and feature acceptance criteria.
 
 ## Repository guide
 
